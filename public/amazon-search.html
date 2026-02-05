@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Amazon Product Search - Ad Platform</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: "Segoe UI", "Hiragino Sans", "Meiryo", sans-serif;
+    background: #f5f5f5;
+    color: #0f1111;
+    min-height: 100vh;
+  }
+
+  /* Header */
+  .app-header {
+    background: #131921;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .app-logo {
+    color: #fff;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    flex-shrink: 0;
+  }
+  .app-logo span { color: #febd69; }
+  .search-info {
+    color: #ccc;
+    font-size: 12px;
+    margin-left: auto;
+    white-space: nowrap;
+  }
+
+  /* Result bar */
+  .result-bar {
+    background: #fff;
+    border-bottom: 1px solid #ddd;
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+  }
+  .result-bar .result-count { color: #565959; }
+  .result-bar .result-count strong { color: #c45500; }
+  .search-all-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 14px;
+    background: #f0f2f2;
+    border: 1px solid #d5d9d9;
+    border-radius: 4px;
+    color: #007185;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.15s;
+  }
+  .search-all-btn:hover { background: #e3e6e6; }
+
+  /* Product list */
+  .product-list {
+    padding: 12px 16px;
+  }
+
+  /* Product card (LLM recommendation) */
+  .product-card {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 12px;
+    display: flex;
+    gap: 16px;
+    transition: box-shadow 0.2s;
+    cursor: default;
+    position: relative;
+  }
+  .product-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
+
+  /* Number badge */
+  .product-number {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: #232f3e;
+    color: #febd69;
+    font-size: 16px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Sponsored card */
+  .product-card.sponsored {
+    border: 2px solid #f0c040;
+    background: linear-gradient(135deg, #fffef5 0%, #fff9e0 100%);
+  }
+  .sponsored-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: #f0a040;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 3px;
+    letter-spacing: 0.5px;
+  }
+  .sponsored-advertiser {
+    font-size: 11px;
+    color: #c45500;
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+  .sponsored-image {
+    width: 80px;
+    height: 80px;
+    flex-shrink: 0;
+    border-radius: 6px;
+    overflow: hidden;
+    background: #f7f7f7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .sponsored-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .product-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .product-title {
+    font-size: 15px;
+    font-weight: 500;
+    color: #0f1111;
+    line-height: 1.4;
+  }
+
+  .product-brand {
+    font-size: 12px;
+    color: #565959;
+  }
+
+  .product-description {
+    font-size: 13px;
+    color: #333;
+    line-height: 1.5;
+    margin-top: 2px;
+  }
+
+  .product-price-estimate {
+    font-size: 14px;
+    font-weight: 600;
+    color: #b12704;
+    margin-top: 2px;
+  }
+
+  .product-category {
+    font-size: 11px;
+    color: #565959;
+    margin-top: 2px;
+  }
+
+  .product-rating {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+  }
+  .stars { color: #de7921; letter-spacing: 1px; }
+  .review-count { color: #007185; font-size: 12px; }
+
+  .product-price {
+    font-size: 22px;
+    font-weight: 400;
+    color: #0f1111;
+    margin-top: 2px;
+  }
+
+  .prime-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 12px;
+    color: #007185;
+    font-weight: 600;
+  }
+
+  .buy-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+    padding: 8px 20px;
+    background: #ffd814;
+    border: 1px solid #fcd200;
+    border-radius: 20px;
+    color: #0f1111;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    text-align: center;
+    transition: background 0.15s;
+    width: fit-content;
+  }
+  .buy-btn:hover { background: #f7ca00; }
+  .buy-btn .arrow { font-size: 11px; }
+
+  /* Brand banner */
+  .brand-banner {
+    margin: 0 0 12px;
+    border-radius: 8px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    text-decoration: none;
+  }
+  .brand-banner:hover { opacity: 0.9; }
+  .brand-banner-text {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  .brand-banner-label {
+    font-size: 10px;
+    opacity: 0.6;
+    margin-top: 4px;
+  }
+  .brand-banner-cta {
+    font-size: 12px;
+    padding: 6px 16px;
+    border-radius: 16px;
+    border: 1px solid;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  /* Dashboard */
+  .dashboard {
+    padding: 16px;
+  }
+  .dashboard-header {
+    background: #232f3e;
+    color: #fff;
+    padding: 20px;
+    border-radius: 10px 10px 0 0;
+    margin-bottom: 0;
+  }
+  .dashboard-header h2 {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .dashboard-header p {
+    font-size: 12px;
+    color: #a0a0a0;
+  }
+
+  .dashboard-summary {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-top: none;
+  }
+  .summary-card {
+    padding: 16px;
+    text-align: center;
+    border-right: 1px solid #eee;
+  }
+  .summary-card:last-child { border-right: none; }
+  .summary-card .label {
+    font-size: 11px;
+    color: #565959;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .summary-card .value {
+    font-size: 22px;
+    font-weight: 700;
+    color: #0f1111;
+  }
+
+  .campaign-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    margin-top: 16px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #ddd;
+  }
+  .campaign-table th {
+    background: #f0f2f2;
+    padding: 10px 12px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #565959;
+    text-align: left;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid #ddd;
+  }
+  .campaign-table td {
+    padding: 10px 12px;
+    font-size: 13px;
+    border-bottom: 1px solid #eee;
+    color: #0f1111;
+  }
+  .campaign-table tr:last-child td { border-bottom: none; }
+  .campaign-table tr:hover { background: #fafafa; }
+
+  .status-active {
+    display: inline-block;
+    background: #067d62;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 3px;
+  }
+  .status-inactive {
+    display: inline-block;
+    background: #cc0c39;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 3px;
+  }
+
+  .banner-section {
+    margin-top: 20px;
+  }
+  .banner-section h3 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #0f1111;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid #febd69;
+  }
+  .banner-list-item {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 14px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .banner-list-item .bl-info { flex: 1; }
+  .banner-list-item .bl-name { font-size: 14px; font-weight: 600; color: #0f1111; }
+  .banner-list-item .bl-text { font-size: 12px; color: #565959; margin-top: 2px; }
+  .banner-list-item .bl-cats { font-size: 11px; color: #007185; margin-top: 4px; }
+  .banner-list-item .bl-fee {
+    font-size: 16px;
+    font-weight: 700;
+    color: #c45500;
+    white-space: nowrap;
+    margin-left: 12px;
+  }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #565959;
+  }
+  .empty-state .es-icon { font-size: 48px; margin-bottom: 12px; }
+  .empty-state p { font-size: 14px; line-height: 1.6; }
+
+  /* Responsive */
+  @media (max-width: 480px) {
+    .product-card { flex-direction: column; align-items: center; text-align: center; }
+    .product-number { margin-bottom: 4px; }
+    .buy-btn { width: 100%; justify-content: center; }
+    .dashboard-summary { grid-template-columns: repeat(2, 1fr); }
+    .campaign-table { font-size: 11px; }
+    .campaign-table th, .campaign-table td { padding: 8px 6px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="app-header">
+  <div class="app-logo">amazon<span>.co.jp</span></div>
+  <div class="search-info" id="search-info"></div>
+</div>
+
+<!-- Result bar -->
+<div class="result-bar" id="result-bar" style="display:none;">
+  <span class="result-count" id="result-count"></span>
+  <a class="search-all-btn" id="search-all-btn" href="#" target="_blank" rel="noopener">
+    Amazonで全て検索 <span class="arrow">&#8599;</span>
+  </a>
+</div>
+
+<!-- Main content area -->
+<div class="product-list" id="product-list">
+  <div class="empty-state" id="empty-state">
+    <div class="es-icon">&#128722;</div>
+    <p>ChatGPTに「おすすめのヘッドホンを探して」と<br/>話しかけてください</p>
+  </div>
+</div>
+
+<!-- Detail modal -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-close-bar">
+      <button class="modal-close-btn" id="modal-close">&times;</button>
+    </div>
+    <div class="modal-product" id="modal-product"></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  // -----------------------------------------------------------------------
+  // MCP Apps Bridge
+  // -----------------------------------------------------------------------
+  let rpcId = 0;
+  const pendingRequests = new Map();
+  let currentQuery = "";
+
+  const rpcNotify = (method, params) => {
+    window.parent.postMessage({ jsonrpc: "2.0", method, params }, "*");
+  };
+
+  const rpcRequest = (method, params) =>
+    new Promise((resolve, reject) => {
+      const id = ++rpcId;
+      pendingRequests.set(id, { resolve, reject });
+      window.parent.postMessage({ jsonrpc: "2.0", id, method, params }, "*");
+    });
+
+  const bridgeReady = (async () => {
+    try {
+      await rpcRequest("ui/initialize", {
+        appInfo: { name: "amazon-product-search", version: "3.0.0" },
+        appCapabilities: {},
+        protocolVersion: "2026-01-26",
+      });
+      rpcNotify("ui/notifications/initialized", {});
+    } catch (e) {
+      console.error("Bridge init failed:", e);
+    }
+  })();
+
+  window.addEventListener(
+    "message",
+    (event) => {
+      if (event.source !== window.parent) return;
+      const msg = event.data;
+      if (!msg || msg.jsonrpc !== "2.0") return;
+
+      if (msg.id != null && typeof msg.method !== "string") {
+        const pending = pendingRequests.get(msg.id);
+        if (pending) {
+          pendingRequests.delete(msg.id);
+          if (msg.error) pending.reject(msg.error);
+          else pending.resolve(msg.result);
+        }
+        return;
+      }
+
+      if (msg.method === "ui/notifications/tool-result") {
+        handleToolResult(msg.params);
+      }
+    },
+    { passive: true }
+  );
+
+  // -----------------------------------------------------------------------
+  // Handle results
+  // -----------------------------------------------------------------------
+  function handleToolResult(response) {
+    if (!response) return;
+    const data = response.structuredContent ?? response;
+
+    if (data.error) {
+      showError(data.message || "Error");
+      return;
+    }
+
+    // Dashboard view
+    if (data.action === "dashboard") {
+      renderDashboard(data);
+      return;
+    }
+
+    // Ad click tracked
+    if (data.action === "ad_tracked") {
+      return;
+    }
+
+    // Product search results
+    if (data.products) {
+      currentQuery = data.query || "";
+      renderProducts(data);
+    }
+  }
+
+  // -----------------------------------------------------------------------
+  // Render product list
+  // -----------------------------------------------------------------------
+  function renderProducts(data) {
+    document.getElementById("empty-state").style.display = "none";
+
+    // Result bar
+    const resultBar = document.getElementById("result-bar");
+    resultBar.style.display = "";
+    document.getElementById("result-count").innerHTML =
+      '<strong>' + data.totalResults + '</strong> 件のおすすめ';
+    document.getElementById("search-info").textContent =
+      '"' + data.query + '" のおすすめ';
+
+    // "Search all on Amazon" button
+    if (data.searchAllUrl) {
+      const searchBtn = document.getElementById("search-all-btn");
+      searchBtn.href = data.searchAllUrl;
+    }
+
+    const list = document.getElementById("product-list");
+    list.innerHTML = "";
+
+    // Sponsored product card (top)
+    if (data.sponsoredProduct) {
+      list.appendChild(createSponsoredCard(data.sponsoredProduct));
+    }
+
+    // LLM-recommended product cards
+    data.products.forEach((product, index) => {
+      list.appendChild(createProductCard(product, index + 1));
+    });
+
+    // Brand banner (bottom)
+    if (data.brandBanner) {
+      list.appendChild(createBrandBanner(data.brandBanner));
+    }
+  }
+
+  // -----------------------------------------------------------------------
+  // Sponsored product card (ad with image, real ASIN link)
+  // -----------------------------------------------------------------------
+  function createSponsoredCard(ad) {
+    const card = document.createElement("div");
+    card.className = "product-card sponsored";
+
+    const starsHtml = renderStars(ad.rating);
+
+    card.innerHTML =
+      '<div class="sponsored-badge">Sponsored</div>' +
+      '<div class="sponsored-image">' +
+        '<img src="' + escapeAttr(ad.imageUrl) + '" alt="' + escapeAttr(ad.title) + '" />' +
+      '</div>' +
+      '<div class="product-info">' +
+        '<div class="sponsored-advertiser">' + escapeHtml(ad.advertiserName) + '</div>' +
+        '<div class="product-title" style="color:#007185;cursor:pointer;">' +
+          escapeHtml(ad.title) +
+        '</div>' +
+        '<div class="product-brand">' + escapeHtml(ad.brand) + '</div>' +
+        '<div class="product-rating">' +
+          '<span class="stars">' + starsHtml + '</span>' +
+          '<span class="review-count">' + ad.reviewCount.toLocaleString() + '</span>' +
+        '</div>' +
+        '<div class="product-price">' + escapeHtml(ad.price) + '</div>' +
+        (ad.isPrime
+          ? '<div class="prime-badge"><span class="checkmark">&#10003;</span> prime</div>'
+          : '') +
+        '<a class="buy-btn" href="' + escapeAttr(ad.amazonUrl) + '" target="_blank" rel="noopener" data-ad-id="' + escapeAttr(ad.adId) + '">Amazonで見る <span class="arrow">&#8599;</span></a>' +
+      '</div>';
+
+    // Track ad click
+    const buyBtn = card.querySelector(".buy-btn");
+    buyBtn.addEventListener("click", () => trackAdClick(ad.adId));
+
+    const titleEl = card.querySelector(".product-title");
+    titleEl.addEventListener("click", () => {
+      trackAdClick(ad.adId);
+      window.open(ad.amazonUrl, "_blank");
+    });
+
+    return card;
+  }
+
+  // -----------------------------------------------------------------------
+  // LLM-recommended product card (no image, Amazon search link)
+  // -----------------------------------------------------------------------
+  function createProductCard(p, index) {
+    const card = document.createElement("div");
+    card.className = "product-card";
+
+    const descHtml = p.description
+      ? '<div class="product-description">' + escapeHtml(p.description) + '</div>'
+      : '';
+    const priceHtml = p.estimatedPrice
+      ? '<div class="product-price-estimate">参考価格: ' + escapeHtml(p.estimatedPrice) + '</div>'
+      : '';
+
+    card.innerHTML =
+      '<div class="product-number">' + index + '</div>' +
+      '<div class="product-info">' +
+        '<div class="product-title">' + escapeHtml(p.title) + '</div>' +
+        '<div class="product-brand">' + escapeHtml(p.brand) + '</div>' +
+        descHtml +
+        priceHtml +
+        '<div class="product-category">' + escapeHtml(p.category) + '</div>' +
+        '<a class="buy-btn" href="' + escapeAttr(p.amazonUrl) + '" target="_blank" rel="noopener">Amazonで検索 <span class="arrow">&#8599;</span></a>' +
+      '</div>';
+
+    return card;
+  }
+
+  function renderStars(rating) {
+    const full = Math.floor(rating);
+    const half = rating - full >= 0.5;
+    let html = "";
+    for (let i = 0; i < full; i++) html += "\u2605";
+    if (half) html += "\u2606";
+    html += " " + rating.toFixed(1);
+    return html;
+  }
+
+  // -----------------------------------------------------------------------
+  // Brand banner
+  // -----------------------------------------------------------------------
+  function createBrandBanner(banner) {
+    const el = document.createElement("a");
+    el.className = "brand-banner";
+    el.href = banner.linkUrl;
+    el.target = "_blank";
+    el.rel = "noopener";
+    el.style.background = banner.bgColor;
+    el.style.color = banner.textColor;
+
+    el.innerHTML =
+      '<div>' +
+        '<div class="brand-banner-text">' + escapeHtml(banner.text) + '</div>' +
+        '<div class="brand-banner-label">Sponsored Brand</div>' +
+      '</div>' +
+      '<div class="brand-banner-cta" style="border-color:' + escapeAttr(banner.textColor) + '; color:' + escapeAttr(banner.textColor) + ';">&#35443;&#12375;&#12367;&#35211;&#12427;</div>';
+
+    return el;
+  }
+
+  // -----------------------------------------------------------------------
+  // Ad click tracking
+  // -----------------------------------------------------------------------
+  async function trackAdClick(adId) {
+    await bridgeReady;
+    try {
+      await rpcRequest("tools/call", {
+        name: "track_ad_click",
+        arguments: { adId: adId },
+      });
+    } catch (err) {
+      console.error("Ad click tracking failed:", err);
+    }
+  }
+
+  // -----------------------------------------------------------------------
+  // Dashboard view
+  // -----------------------------------------------------------------------
+  function renderDashboard(data) {
+    document.getElementById("result-bar").style.display = "none";
+    document.getElementById("search-info").textContent = "Ad Dashboard";
+
+    const main = document.getElementById("product-list");
+    main.innerHTML = "";
+
+    const dashboard = document.createElement("div");
+    dashboard.className = "dashboard";
+
+    const s = data.summary;
+
+    dashboard.innerHTML =
+      '<div class="dashboard-header">' +
+        '<h2>Ad Campaign Dashboard</h2>' +
+        '<p>MCP Apps Contextual Ad Platform</p>' +
+      '</div>';
+
+    dashboard.innerHTML +=
+      '<div class="dashboard-summary">' +
+        '<div class="summary-card"><div class="label">Campaigns</div><div class="value">' + s.campaignCount + '</div></div>' +
+        '<div class="summary-card"><div class="label">Impressions</div><div class="value">' + s.totalImpressions.toLocaleString() + '</div></div>' +
+        '<div class="summary-card"><div class="label">Clicks</div><div class="value">' + s.totalClicks.toLocaleString() + '</div></div>' +
+        '<div class="summary-card"><div class="label">Total Spend</div><div class="value">&yen;' + s.totalSpend.toLocaleString() + '</div></div>' +
+      '</div>';
+
+    let tableHtml =
+      '<table class="campaign-table">' +
+        '<thead><tr>' +
+          '<th>Campaign</th><th>Advertiser</th><th>CPC</th><th>Budget/day</th>' +
+          '<th>Imp</th><th>Click</th><th>CTR</th><th>Spend</th><th>Status</th>' +
+        '</tr></thead><tbody>';
+
+    data.campaigns.forEach((c) => {
+      tableHtml +=
+        '<tr>' +
+          '<td>' + escapeHtml(c.campaignName) + '</td>' +
+          '<td>' + escapeHtml(c.advertiserName) + '</td>' +
+          '<td>&yen;' + c.bidCpc.toLocaleString() + '</td>' +
+          '<td>&yen;' + c.dailyBudget.toLocaleString() + '</td>' +
+          '<td>' + c.impressions.toLocaleString() + '</td>' +
+          '<td>' + c.clicks.toLocaleString() + '</td>' +
+          '<td>' + escapeHtml(c.ctr) + '</td>' +
+          '<td>&yen;' + c.spend.toLocaleString() + '</td>' +
+          '<td>' + (c.isActive
+            ? '<span class="status-active">Active</span>'
+            : '<span class="status-inactive">Paused</span>') +
+          '</td>' +
+        '</tr>';
+    });
+    tableHtml += '</tbody></table>';
+    dashboard.innerHTML += tableHtml;
+
+    if (data.banners && data.banners.length > 0) {
+      let bannerHtml = '<div class="banner-section"><h3>Brand Banners</h3>';
+      data.banners.forEach((b) => {
+        bannerHtml +=
+          '<div class="banner-list-item">' +
+            '<div class="bl-info">' +
+              '<div class="bl-name">' + escapeHtml(b.advertiserName) + '</div>' +
+              '<div class="bl-text">' + escapeHtml(b.text) + '</div>' +
+              '<div class="bl-cats">' + escapeHtml(b.targetCategories.join(", ")) + '</div>' +
+            '</div>' +
+            '<div class="bl-fee">&yen;' + b.monthlyFee.toLocaleString() + '/mo</div>' +
+          '</div>';
+      });
+      bannerHtml += '</div>';
+      dashboard.innerHTML += bannerHtml;
+    }
+
+    main.appendChild(dashboard);
+  }
+
+  // -----------------------------------------------------------------------
+  // Helpers
+  // -----------------------------------------------------------------------
+  document.getElementById("modal-close").addEventListener("click", () => {
+    document.getElementById("modal-overlay").classList.remove("visible");
+  });
+  document.getElementById("modal-overlay").addEventListener("click", (e) => {
+    if (e.target === e.currentTarget)
+      document.getElementById("modal-overlay").classList.remove("visible");
+  });
+
+  function showError(msg) {
+    const list = document.getElementById("product-list");
+    list.innerHTML =
+      '<div class="empty-state">' +
+        '<div class="es-icon">&#9888;&#65039;</div>' +
+        '<p>' + escapeHtml(msg) + '</p>' +
+      '</div>';
+  }
+
+  function escapeHtml(str) {
+    if (!str) return "";
+    const d = document.createElement("div");
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  function escapeAttr(str) {
+    if (!str) return "";
+    return str
+      .replace(/&/g, "&amp;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+  }
+})();
+</script>
+</body>
+</html>
