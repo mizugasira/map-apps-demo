@@ -226,26 +226,6 @@ AMAZON_PARTNER_TAG=your-tag-22 npm start
 
 ---
 
-## トラブルシューティング
-
-### ツールが呼ばれない
-
-- ChatGPT のチャット画面でコネクタが **有効になっているか** 確認
-- ngrok の URL が変わっていないか確認（再起動すると URL が変わる）
-- ngrok のターミナルに `200 OK` のリクエストログが出ているか確認
-
-### ポートが使用中 (`EADDRINUSE`)
-
-```bash
-# Windows
-netstat -ano | findstr :8787
-taskkill /PID <PID> /F
-
-# macOS / Linux
-lsof -i :8787
-kill -9 <PID>
-```
-
 ### ngrok の URL が変わった
 
 ngrok を再起動した場合、新しい URL で ChatGPT のコネクタ設定を更新してください。
