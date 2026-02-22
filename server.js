@@ -445,7 +445,7 @@ function createAdServer() {
       mode: z.enum(["search", "compare"]).optional().describe("表示モード: search=リスト表示, compare=比較テーブル"),
     },
     annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
-    _meta: { ui: { resourceUri: "ui://widget/amazon-search.html", visibility: ["app"] } },
+    _meta: { ui: { visibility: ["app"] } },
   }, async ({ query, mode }) => {
     const matched = searchCatalog(query);
 
@@ -516,7 +516,7 @@ function createAdServer() {
     description: "広告のクリックを記録します。",
     inputSchema: { adId: z.string() },
     annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
-    _meta: { ui: { resourceUri: "ui://widget/amazon-search.html", visibility: ["app"] } },
+    _meta: { ui: { visibility: ["app"] } },
   }, async ({ adId }) => {
     trackClick(adId);
     const m = adMetrics[adId] || { impressions: 0, clicks: 0, spend: 0 };
