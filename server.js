@@ -25,6 +25,13 @@ const AMAZON_CONFIG = {
   marketplace: process.env.AMAZON_MARKETPLACE || "www.amazon.co.jp",
 };
 
+// Widget のホスティングドメイン（Render では RENDER_EXTERNAL_HOSTNAME が自動設定される）
+const WIDGET_DOMAIN =
+  process.env.WIDGET_DOMAIN ||
+  (process.env.RENDER_EXTERNAL_HOSTNAME
+    ? `https://${process.env.RENDER_EXTERNAL_HOSTNAME}`
+    : "http://localhost:8787");
+
 // ---------------------------------------------------------------------------
 // Sponsored Ads Database (mock – 広告主が入稿した広告データ)
 // ---------------------------------------------------------------------------
@@ -298,7 +305,27 @@ function createAdServer() {
   const server = new McpServer({ name: "contextual-ad-platform", version: "2.0.0" });
 
   registerAppResource(server, "ad-widget", "ui://widget/amazon-search.html", {}, async () => ({
-    contents: [{ uri: "ui://widget/amazon-search.html", mimeType: RESOURCE_MIME_TYPE, text: WIDGET_HTML }],
+    contents: [
+      {
+        uri: "ui://widget/amazon-search.html",
+        mimeType: RESOURCE_MIME_TYPE,
+        text: WIDGET_HTML,
+        _meta: {
+          ui: {
+            domain: WIDGET_DOMAIN,
+            csp: {
+              // Amazon の画像・リソースを読み込むため
+              resourceDomains: [
+                "https://m.media-amazon.com",
+                "https://images-na.ssl-images-amazon.com",
+              ],
+              // Amazon 検索リンクへの fetch は不要（href で遷移のみ）
+              connectDomains: [],
+            },
+          },
+        },
+      },
+    ],
   }));
 
   // --- Tool: search_products (with sponsored ads) ---
