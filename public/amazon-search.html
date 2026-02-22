@@ -21,6 +21,9 @@
     display: flex;
     align-items: center;
     gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 101;
   }
   .app-logo {
     color: #fff;
@@ -568,6 +571,9 @@
     display: flex;
     gap: 8px;
     align-items: center;
+    position: sticky;
+    top: 42px; /* app-header の高さ分オフセット */
+    z-index: 100;
   }
   .widget-search-bar input {
     flex: 1;
