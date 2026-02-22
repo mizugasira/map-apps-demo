@@ -1,8 +1,11 @@
 {
   "name": "mcp-app-demo",
   "version": "1.0.0",
-  "description": "ChatGPT Apps SDK demo - Amazon Product Search",
+  "description": "MCP Apps Contextual Ad Platform - ChatGPT Apps demo",
   "type": "module",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js"

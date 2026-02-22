@@ -31,85 +31,70 @@ ChatGPT (LLM): 知識をもとに商品を推薦 → search_products ツール�
 
 ## 前提条件
 
-- **Node.js** v18 以上
-- **npm** v9 以上
-- **ngrok** アカウント（無料プランで可）
 - **ChatGPT Plus** アカウント（MCP Apps 機能を使用するため）
+- デプロイ先に応じて以下のいずれか：
+  - **Render アカウント**（無料、推奨）
+  - **Node.js** v18 以上 + **ngrok**（ローカル開発用）
 
 ---
 
-## セットアップ手順
+## デプロイ方法 A: Render（推奨）
 
-### 1. 依存パッケージのインストール
+ngrok 不要で、固定 URL が取得できます。
 
-```bash
-cd D:\workspace\mcp-app
-npm install
-```
+### 1. Render にサインアップ
 
-### 2. ngrok のインストール
+[https://render.com](https://render.com) でアカウントを作成（GitHub 連携推奨）
 
-ngrok がインストールされていない場合：
+### 2. Web Service を作成
 
-```bash
-# Windows (winget)
-winget install Ngrok.Ngrok
+1. Render ダッシュボードで **「New」** > **「Web Service」** をクリック
+2. **「Build and deploy from a Git repository」** を選択
+3. GitHub リポジトリ `mizugasira/map-apps-demo` を選択
+4. 以下を設定：
 
-# macOS (Homebrew)
-brew install ngrok
+| 項目 | 値 |
+|---|---|
+| Name | `mcp-ad-platform`（任意） |
+| Region | `Oregon` or `Singapore` |
+| Branch | `main` |
+| Runtime | `Node` |
+| Build Command | `npm install` |
+| Start Command | `node server.js` |
+| Instance Type | **Free** |
 
-# Linux
-snap install ngrok
-```
+5. 必要に応じて環境変数を追加：
+   - `AMAZON_PARTNER_TAG` = `your-tag-22`（アフィリエイト用、任意）
+6. **「Deploy Web Service」** をクリック
 
-ngrok アカウントの authtoken を設定：
+### 3. デプロイ完了後の URL 確認
 
-```bash
-ngrok config add-authtoken <YOUR_AUTHTOKEN>
-```
-
-> authtoken は [https://dashboard.ngrok.com/get-started/your-authtoken](https://dashboard.ngrok.com/get-started/your-authtoken) から取得できます。
-
-### 3. サーバーの起動
-
-```bash
-npm start
-```
-
-以下のログが表示されれば成功です：
+デプロイが完了すると、以下のような URL が発行されます：
 
 ```
-Contextual Ad Platform MCP server on http://localhost:8787/mcp
+https://mcp-ad-platform.onrender.com
 ```
 
-開発中にファイル変更を自動反映したい場合：
+MCP エンドポイントは：
 
-```bash
-npm run dev
+```
+https://mcp-ad-platform.onrender.com/mcp
 ```
 
-### 4. ngrok トンネルの作成
+> **注意**: Render 無料プランでは 15 分間アクセスがないとスリープします。初回アクセス時に 30〜60 秒のコールドスタートがあります。
 
-別のターミナルで以下を実行：
-
-```bash
-ngrok http 8787
-```
-
-表示された HTTPS URL をメモします（例: `https://xxxx-xxxx.ngrok-free.app`）。
-
-> **注意**: ngrok を再起動すると URL が変わります。その際は ChatGPT 側のコネクタ設定も更新が必要です。
-
-### 5. ChatGPT にコネクタを登録
+### 4. ChatGPT にコネクタを登録
 
 1. [ChatGPT](https://chatgpt.com) を開く
 2. 画面右上の **設定アイコン** > **Apps (Beta)** に移動
 3. **「Add App」** をクリック
-4. 以下を入力：
-   - **Server URL**: `https://xxxx-xxxx.ngrok-free.app/mcp`（ngrok の URL + `/mcp`）
+4. **Server URL** に Render の URL を入力：
+   ```
+   https://mcp-ad-platform.onrender.com/mcp
+   ```
 5. **保存**する
 
-### 6. 動作確認
+### 5. 動作確認
 
 ChatGPT のチャット画面で、登録したアプリのコネクタを **有効化** してから以下を入力：
 
@@ -127,6 +112,66 @@ ChatGPT のチャット画面で、登録したアプリのコネクタを **有
 ```
 広告ダッシュボードを見せて
 ```
+
+---
+
+## デプロイ方法 B: ローカル + ngrok
+
+開発・デバッグ用です。
+
+### 1. 依存パッケージのインストール
+
+```bash
+git clone https://github.com/mizugasira/map-apps-demo.git
+cd map-apps-demo
+npm install
+```
+
+### 2. サーバーの起動
+
+```bash
+npm start
+```
+
+以下のログが表示されれば成功です：
+
+```
+Contextual Ad Platform MCP server on http://localhost:8787/mcp
+```
+
+開発中にファイル変更を自動反映したい場合：
+
+```bash
+npm run dev
+```
+
+### 3. ngrok トンネルの作成
+
+ngrok がインストールされていない場合：
+
+```bash
+# Windows
+winget install Ngrok.Ngrok
+
+# macOS
+brew install ngrok
+```
+
+authtoken を設定（[https://dashboard.ngrok.com/get-started/your-authtoken](https://dashboard.ngrok.com/get-started/your-authtoken) から取得）：
+
+```bash
+ngrok config add-authtoken <YOUR_AUTHTOKEN>
+```
+
+別のターミナルで以下を実行：
+
+```bash
+ngrok http 8787
+```
+
+表示された HTTPS URL + `/mcp` を ChatGPT のコネクタに登録してください。
+
+> **注意**: ngrok を再起動すると URL が変わります。その都度コネクタ設定の更新が必要です。
 
 ---
 
@@ -176,6 +221,7 @@ mcp-app/
 ├── server.js                    # MCP サーバー（広告ロジック + URL生成）
 ├── public/
 │   └── amazon-search.html       # ウィジェット UI（ChatGPT内で描画）
+├── render.yaml                  # Render デプロイ設定
 ├── package.json
 └── README.md
 ```
@@ -226,7 +272,32 @@ AMAZON_PARTNER_TAG=your-tag-22 npm start
 
 ---
 
+## トラブルシューティング
+
+### ツールが呼ばれない
+
+- ChatGPT のチャット画面でコネクタが **有効になっているか** 確認
+- ngrok / Render の URL が正しいか確認
+- Render の場合、初回アクセスでスリープ解除に 30〜60 秒かかることがある
+
+### Render でデプロイが失敗する
+
+- Render ダッシュボードの **Logs** タブでエラーを確認
+- `npm install` でエラーが出る場合は Node.js バージョンを確認（v18 以上が必要）
+
+### ポートが使用中 (`EADDRINUSE`)（ローカル開発時）
+
+```bash
+# Windows
+netstat -ano | findstr :8787
+taskkill /PID <PID> /F
+
+# macOS / Linux
+lsof -i :8787
+kill -9 <PID>
+```
+
 ### ngrok の URL が変わった
 
 ngrok を再起動した場合、新しい URL で ChatGPT のコネクタ設定を更新してください。
-固定ドメインが必要な場合は ngrok の有料プランを検討してください。
+固定 URL が必要な場合は Render へのデプロイを推奨します。
