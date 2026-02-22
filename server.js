@@ -318,38 +318,57 @@ const httpServer = createServer(async (req, res) => {
   if (!req.url) { res.writeHead(400).end("Missing URL"); return; }
   const url = new URL(req.url, `http://${req.headers.host ?? "localhost"}`);
 
+  // CORS preflight
   if (req.method === "OPTIONS" && url.pathname === MCP_PATH) {
     res.writeHead(204, {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "POST, GET, DELETE, OPTIONS",
-      "Access-Control-Allow-Headers": "content-type, mcp-session-id",
+      "Access-Control-Allow-Headers": "content-type, mcp-session-id, accept",
       "Access-Control-Expose-Headers": "Mcp-Session-Id",
     });
     res.end();
     return;
   }
 
+  // Health check (Render / uptime monitors)
   if (req.method === "GET" && url.pathname === "/") {
     res.writeHead(200, { "content-type": "application/json" });
     res.end(JSON.stringify({ status: "ok", name: "contextual-ad-platform", version: "2.0.0" }));
     return;
   }
 
-  const MCP_METHODS = new Set(["POST", "GET", "DELETE"]);
-  if (url.pathname === MCP_PATH && req.method && MCP_METHODS.has(req.method)) {
+  // --- MCP endpoint ---
+  if (url.pathname === MCP_PATH) {
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Access-Control-Expose-Headers", "Mcp-Session-Id");
-    const server = createAdServer();
-    const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined, enableJsonResponse: true });
-    res.on("close", () => { transport.close(); server.close(); });
-    try {
-      await server.connect(transport);
-      await transport.handleRequest(req, res);
-    } catch (error) {
-      console.error("MCP error:", error);
-      if (!res.headersSent) res.writeHead(500).end("Internal server error");
+
+    // Stateless server: only POST is meaningful (GET SSE / DELETE session are not used)
+    if (req.method === "GET" || req.method === "DELETE") {
+      res.writeHead(405, { "content-type": "application/json" });
+      res.end(JSON.stringify({
+        jsonrpc: "2.0",
+        error: { code: -32000, message: "Method not allowed. Use POST for stateless MCP." },
+        id: null,
+      }));
+      return;
     }
-    return;
+
+    if (req.method === "POST") {
+      const server = createAdServer();
+      const transport = new StreamableHTTPServerTransport({
+        sessionIdGenerator: undefined,
+        enableJsonResponse: true,
+      });
+      res.on("close", () => { transport.close(); server.close(); });
+      try {
+        await server.connect(transport);
+        await transport.handleRequest(req, res);
+      } catch (error) {
+        console.error("MCP error:", error);
+        if (!res.headersSent) res.writeHead(500).end("Internal server error");
+      }
+      return;
+    }
   }
 
   res.writeHead(404).end("Not Found");
