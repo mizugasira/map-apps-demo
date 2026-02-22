@@ -561,6 +561,56 @@
   .comparison-table .action-cell { padding: 12px 8px; }
   .comparison-table .action-cell .buy-btn { font-size: 12px; padding: 6px 14px; margin: 0 auto; }
 
+  /* Widget search bar */
+  .widget-search-bar {
+    background: #232f3e;
+    padding: 8px 16px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .widget-search-bar input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 2px solid #febd69;
+    border-radius: 6px;
+    font-size: 14px;
+    outline: none;
+    background: #fff;
+    color: #0f1111;
+  }
+  .widget-search-bar input:focus { border-color: #f0a040; }
+  .widget-search-bar input::placeholder { color: #999; }
+  .ws-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    background: #febd69;
+    color: #0f1111;
+    white-space: nowrap;
+    transition: background 0.15s;
+  }
+  .ws-btn:hover { background: #f0a040; }
+  .ws-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .ws-compare { background: #007185; color: #fff; }
+  .ws-compare:hover { background: #005f73; }
+  .ws-loading { position: relative; }
+  .ws-loading::after {
+    content: "";
+    display: inline-block;
+    width: 14px; height: 14px;
+    border: 2px solid rgba(0,0,0,0.2);
+    border-top-color: #0f1111;
+    border-radius: 50%;
+    animation: ws-spin 0.6s linear infinite;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+  @keyframes ws-spin { to { transform: rotate(360deg); } }
+
   /* Empty state */
   .empty-state {
     text-align: center;
@@ -582,6 +632,9 @@
     .campaign-table th, .campaign-table td { padding: 8px 6px; }
     .comparison-container { padding: 8px; }
     .comparison-table th, .comparison-table td { padding: 8px 8px; font-size: 11px; }
+    .widget-search-bar { flex-wrap: wrap; }
+    .widget-search-bar input { min-width: 0; }
+    .ws-btn { padding: 8px 12px; font-size: 12px; }
   }
 </style>
 </head>
@@ -591,6 +644,13 @@
 <div class="app-header">
   <div class="app-logo">amazon<span>.co.jp</span></div>
   <div class="search-info" id="search-info"></div>
+</div>
+
+<!-- Widget Search Bar -->
+<div class="widget-search-bar" id="widget-search-bar">
+  <input type="text" id="widget-search-input" placeholder="商品を検索...（例: ヘッドホン、キーボード）" />
+  <button id="widget-search-btn" class="ws-btn">検索</button>
+  <button id="widget-compare-btn" class="ws-btn ws-compare">比較</button>
 </div>
 
 <!-- Result bar -->
@@ -605,7 +665,7 @@
 <div class="product-list" id="product-list">
   <div class="empty-state" id="empty-state">
     <div class="es-icon">&#128722;</div>
-    <p>ChatGPTに「おすすめのヘッドホンを探して」と<br/>話しかけてください</p>
+    <p>上の検索欄にキーワードを入力するか、<br/>ChatGPTに「おすすめのヘッドホンを探して」と<br/>話しかけてください</p>
   </div>
 </div>
 
@@ -908,6 +968,52 @@
       console.error("Ad click tracking failed:", err);
     }
   }
+
+  // -----------------------------------------------------------------------
+  // Widget search bar — tools/call で widget_search を呼ぶ
+  // -----------------------------------------------------------------------
+  function setSearchLoading(loading) {
+    var btns = document.querySelectorAll(".ws-btn");
+    btns.forEach(function (b) { b.disabled = loading; });
+    var input = document.getElementById("widget-search-input");
+    input.disabled = loading;
+    // スピナー表示
+    var searchBtn = document.getElementById("widget-search-btn");
+    if (loading) searchBtn.classList.add("ws-loading");
+    else searchBtn.classList.remove("ws-loading");
+  }
+
+  async function widgetSearch(mode) {
+    var input = document.getElementById("widget-search-input");
+    var query = input.value.trim();
+    if (!query) return;
+
+    setSearchLoading(true);
+    await bridgeReady;
+    try {
+      var result = await rpcRequest("tools/call", {
+        name: "widget_search",
+        arguments: { query: query, mode: mode || "search" },
+      });
+      // tools/call の結果は { content: [...], structuredContent: {...} } 形式
+      var data = result && result.structuredContent ? result.structuredContent : result;
+      if (data) handleToolResult({ structuredContent: data });
+    } catch (err) {
+      showError("検索に失敗しました: " + (err && err.message ? err.message : "unknown error"));
+    } finally {
+      setSearchLoading(false);
+    }
+  }
+
+  document.getElementById("widget-search-btn").addEventListener("click", function () {
+    widgetSearch("search");
+  });
+  document.getElementById("widget-compare-btn").addEventListener("click", function () {
+    widgetSearch("compare");
+  });
+  document.getElementById("widget-search-input").addEventListener("keydown", function (e) {
+    if (e.key === "Enter") widgetSearch("search");
+  });
 
   // -----------------------------------------------------------------------
   // Comparison table view
