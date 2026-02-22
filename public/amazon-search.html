@@ -86,15 +86,50 @@
   }
   .product-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
 
-  /* Number badge */
-  .product-number {
-    width: 36px;
-    height: 36px;
+  /* Product thumbnail (image + number overlay) */
+  .product-thumbnail {
+    width: 80px;
+    height: 80px;
     flex-shrink: 0;
+    border-radius: 8px;
+    background: #f7f7f7;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .product-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .number-overlay {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: 22px;
+    height: 22px;
     border-radius: 50%;
-    background: #232f3e;
+    background: rgba(35,47,62,0.85);
     color: #febd69;
-    font-size: 16px;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+
+  /* Number badge (fallback when no image) */
+  .product-number {
+    width: 80px;
+    height: 80px;
+    flex-shrink: 0;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #232f3e 0%, #37475a 100%);
+    color: #febd69;
+    font-size: 28px;
     font-weight: 700;
     display: flex;
     align-items: center;
@@ -388,6 +423,144 @@
     margin-left: 12px;
   }
 
+  /* Recommend reason */
+  .recommend-reason {
+    background: #f0f7ff;
+    border-left: 3px solid #007185;
+    padding: 8px 12px;
+    margin-top: 6px;
+    border-radius: 0 6px 6px 0;
+    font-size: 13px;
+    color: #0f1111;
+    line-height: 1.5;
+  }
+  .recommend-reason .rr-label {
+    font-weight: 700;
+    color: #007185;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-bottom: 2px;
+  }
+
+  /* Pros / Cons */
+  .pros-cons {
+    display: flex;
+    gap: 12px;
+    margin-top: 6px;
+    font-size: 12px;
+    line-height: 1.6;
+  }
+  .pros-cons .pros, .pros-cons .cons { flex: 1; min-width: 0; }
+  .pros-cons .pc-title {
+    font-weight: 700;
+    font-size: 11px;
+    margin-bottom: 2px;
+  }
+  .pros-cons .pc-title.good { color: #067d62; }
+  .pros-cons .pc-title.warn { color: #c45500; }
+  .pros-cons ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .pros-cons li { padding: 1px 0; }
+  .pros-cons .pros li::before { content: "\2705 "; }
+  .pros-cons .cons li::before { content: "\26A0\FE0F "; }
+
+  /* ---- Comparison Table ---- */
+  .comparison-container {
+    padding: 12px 16px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .comparison-table {
+    width: 100%;
+    min-width: 500px;
+    border-collapse: collapse;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .comparison-table th,
+  .comparison-table td {
+    padding: 10px 14px;
+    text-align: center;
+    border-bottom: 1px solid #eee;
+    font-size: 13px;
+    vertical-align: top;
+  }
+  .comparison-table th {
+    background: #f8f9fa;
+    border-bottom: 2px solid #ddd;
+    min-width: 140px;
+  }
+  .comparison-table .row-header {
+    text-align: left;
+    font-weight: 700;
+    font-size: 12px;
+    color: #565959;
+    background: #fafafa;
+    white-space: nowrap;
+    min-width: 90px;
+    width: 100px;
+  }
+  .comparison-table .product-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .comparison-table .product-header img {
+    width: 64px;
+    height: 64px;
+    object-fit: cover;
+    border-radius: 8px;
+    background: #f0f0f0;
+  }
+  .comparison-table .product-header .ph-number {
+    width: 64px;
+    height: 64px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #232f3e 0%, #37475a 100%);
+    color: #febd69;
+    font-size: 24px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .comparison-table .product-header .ph-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #0f1111;
+    line-height: 1.3;
+  }
+  .comparison-table .product-header .ph-brand {
+    font-size: 11px;
+    color: #565959;
+  }
+  .comparison-table .product-header .ph-price {
+    font-size: 14px;
+    font-weight: 700;
+    color: #b12704;
+  }
+  .comparison-table .reason-cell {
+    text-align: left;
+    font-size: 12px;
+    color: #0f1111;
+    line-height: 1.5;
+    background: #f0f7ff;
+  }
+  .comparison-table .pros-cell { text-align: left; font-size: 12px; line-height: 1.6; }
+  .comparison-table .pros-cell ul { list-style: none; padding: 0; margin: 0; }
+  .comparison-table .pros-cell li { padding: 1px 0; }
+  .comparison-table .pros-cell.good li::before { content: "\2705 "; }
+  .comparison-table .pros-cell.bad li::before { content: "\26A0\FE0F "; }
+  .comparison-table .action-cell { padding: 12px 8px; }
+  .comparison-table .action-cell .buy-btn { font-size: 12px; padding: 6px 14px; margin: 0 auto; }
+
   /* Empty state */
   .empty-state {
     text-align: center;
@@ -401,10 +574,14 @@
   @media (max-width: 480px) {
     .product-card { flex-direction: column; align-items: center; text-align: center; }
     .product-number { margin-bottom: 4px; }
+    .product-thumbnail { margin-bottom: 4px; }
+    .pros-cons { flex-direction: column; gap: 6px; }
     .buy-btn { width: 100%; justify-content: center; }
     .dashboard-summary { grid-template-columns: repeat(2, 1fr); }
     .campaign-table { font-size: 11px; }
     .campaign-table th, .campaign-table td { padding: 8px 6px; }
+    .comparison-container { padding: 8px; }
+    .comparison-table th, .comparison-table td { padding: 8px 8px; font-size: 11px; }
   }
 </style>
 </head>
@@ -517,6 +694,12 @@
       return;
     }
 
+    // Comparison view
+    if (data.action === "comparison") {
+      renderComparison(data);
+      return;
+    }
+
     // Ad click tracked
     if (data.action === "ad_tracked") {
       return;
@@ -613,11 +796,23 @@
   }
 
   // -----------------------------------------------------------------------
-  // LLM-recommended product card (no image, Amazon search link)
+  // LLM-recommended product card (image + recommend reason + pros/cons)
   // -----------------------------------------------------------------------
   function createProductCard(p, index) {
     const card = document.createElement("div");
     card.className = "product-card";
+
+    // Thumbnail: image with number overlay, or number-only fallback
+    let thumbHtml;
+    if (p.imageUrl) {
+      thumbHtml =
+        '<div class="product-thumbnail">' +
+          '<img src="' + escapeAttr(p.imageUrl) + '" alt="' + escapeAttr(p.title) + '" onerror="this.parentElement.outerHTML=\'<div class=product-number>' + index + '</div>\'" />' +
+          '<div class="number-overlay">' + index + '</div>' +
+        '</div>';
+    } else {
+      thumbHtml = '<div class="product-number">' + index + '</div>';
+    }
 
     const descHtml = p.description
       ? '<div class="product-description">' + escapeHtml(p.description) + '</div>'
@@ -626,14 +821,41 @@
       ? '<div class="product-price-estimate">参考価格: ' + escapeHtml(p.estimatedPrice) + '</div>'
       : '';
 
+    // Recommend reason
+    const reasonHtml = p.recommendReason
+      ? '<div class="recommend-reason">' +
+          '<div class="rr-label">AIのおすすめ理由</div>' +
+          escapeHtml(p.recommendReason) +
+        '</div>'
+      : '';
+
+    // Pros / Cons
+    let prosConsHtml = '';
+    if ((p.pros && p.pros.length) || (p.cons && p.cons.length)) {
+      prosConsHtml = '<div class="pros-cons">';
+      if (p.pros && p.pros.length) {
+        prosConsHtml += '<div class="pros"><div class="pc-title good">Good</div><ul>' +
+          p.pros.map(function(t) { return '<li>' + escapeHtml(t) + '</li>'; }).join('') +
+          '</ul></div>';
+      }
+      if (p.cons && p.cons.length) {
+        prosConsHtml += '<div class="cons"><div class="pc-title warn">Note</div><ul>' +
+          p.cons.map(function(t) { return '<li>' + escapeHtml(t) + '</li>'; }).join('') +
+          '</ul></div>';
+      }
+      prosConsHtml += '</div>';
+    }
+
     card.innerHTML =
-      '<div class="product-number">' + index + '</div>' +
+      thumbHtml +
       '<div class="product-info">' +
         '<div class="product-title">' + escapeHtml(p.title) + '</div>' +
         '<div class="product-brand">' + escapeHtml(p.brand) + '</div>' +
         descHtml +
         priceHtml +
         '<div class="product-category">' + escapeHtml(p.category) + '</div>' +
+        reasonHtml +
+        prosConsHtml +
         '<a class="buy-btn" href="' + escapeAttr(p.amazonUrl) + '" target="_blank" rel="noopener">Amazonで検索 <span class="arrow">&#8599;</span></a>' +
       '</div>';
 
@@ -684,6 +906,123 @@
       });
     } catch (err) {
       console.error("Ad click tracking failed:", err);
+    }
+  }
+
+  // -----------------------------------------------------------------------
+  // Comparison table view
+  // -----------------------------------------------------------------------
+  function renderComparison(data) {
+    document.getElementById("empty-state").style.display = "none";
+
+    // Result bar
+    const resultBar = document.getElementById("result-bar");
+    resultBar.style.display = "";
+    document.getElementById("result-count").innerHTML =
+      '<strong>' + data.products.length + '</strong> 製品を比較';
+    document.getElementById("search-info").textContent =
+      '"' + data.query + '" の比較';
+    if (data.searchAllUrl) {
+      document.getElementById("search-all-btn").href = data.searchAllUrl;
+    }
+
+    const main = document.getElementById("product-list");
+    main.innerHTML = "";
+
+    // Sponsored card at top
+    if (data.sponsoredProduct) {
+      main.appendChild(createSponsoredCard(data.sponsoredProduct));
+    }
+
+    // Build comparison table
+    var container = document.createElement("div");
+    container.className = "comparison-container";
+
+    var products = data.products;
+    var specKeys = data.specKeys || [];
+    var colCount = products.length;
+
+    var html = '<table class="comparison-table">';
+
+    // Header row: product images + names
+    html += '<thead><tr><th class="row-header"></th>';
+    for (var i = 0; i < colCount; i++) {
+      var p = products[i];
+      var imgHtml = p.imageUrl
+        ? '<img src="' + escapeAttr(p.imageUrl) + '" alt="' + escapeAttr(p.title) + '" onerror="this.outerHTML=\'<div class=ph-number>' + (i + 1) + '</div>\'" />'
+        : '<div class="ph-number">' + (i + 1) + '</div>';
+      html += '<th><div class="product-header">' +
+        imgHtml +
+        '<div class="ph-title">' + escapeHtml(p.title) + '</div>' +
+        '<div class="ph-brand">' + escapeHtml(p.brand) + '</div>' +
+        (p.estimatedPrice ? '<div class="ph-price">' + escapeHtml(p.estimatedPrice) + '</div>' : '') +
+        '</div></th>';
+    }
+    html += '</tr></thead><tbody>';
+
+    // Spec rows
+    for (var s = 0; s < specKeys.length; s++) {
+      var key = specKeys[s];
+      html += '<tr><td class="row-header">' + escapeHtml(key) + '</td>';
+      for (var j = 0; j < colCount; j++) {
+        var val = (products[j].specs && products[j].specs[key]) || '-';
+        html += '<td>' + escapeHtml(val) + '</td>';
+      }
+      html += '</tr>';
+    }
+
+    // Recommend reason row
+    var hasReason = products.some(function(p) { return p.recommendReason; });
+    if (hasReason) {
+      html += '<tr><td class="row-header">おすすめ理由</td>';
+      for (var r = 0; r < colCount; r++) {
+        html += '<td class="reason-cell">' + escapeHtml(products[r].recommendReason || '-') + '</td>';
+      }
+      html += '</tr>';
+    }
+
+    // Pros row
+    var hasPros = products.some(function(p) { return p.pros && p.pros.length; });
+    if (hasPros) {
+      html += '<tr><td class="row-header">Good</td>';
+      for (var k = 0; k < colCount; k++) {
+        var pros = products[k].pros || [];
+        html += '<td class="pros-cell good"><ul>' +
+          pros.map(function(t) { return '<li>' + escapeHtml(t) + '</li>'; }).join('') +
+          '</ul></td>';
+      }
+      html += '</tr>';
+    }
+
+    // Cons row
+    var hasCons = products.some(function(p) { return p.cons && p.cons.length; });
+    if (hasCons) {
+      html += '<tr><td class="row-header">Note</td>';
+      for (var m = 0; m < colCount; m++) {
+        var cons = products[m].cons || [];
+        html += '<td class="pros-cell bad"><ul>' +
+          cons.map(function(t) { return '<li>' + escapeHtml(t) + '</li>'; }).join('') +
+          '</ul></td>';
+      }
+      html += '</tr>';
+    }
+
+    // Action row (Amazon buttons)
+    html += '<tr><td class="row-header"></td>';
+    for (var a = 0; a < colCount; a++) {
+      html += '<td class="action-cell">' +
+        '<a class="buy-btn" href="' + escapeAttr(products[a].amazonUrl) + '" target="_blank" rel="noopener">Amazonで検索 <span class="arrow">&#8599;</span></a>' +
+        '</td>';
+    }
+    html += '</tr>';
+
+    html += '</tbody></table>';
+    container.innerHTML = html;
+    main.appendChild(container);
+
+    // Brand banner at bottom
+    if (data.brandBanner) {
+      main.appendChild(createBrandBanner(data.brandBanner));
     }
   }
 

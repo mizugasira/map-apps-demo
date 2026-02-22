@@ -182,7 +182,9 @@ function createAdServer() {
     description:
       "ユーザーが「おすすめの〇〇を探して」と言った場合にこのツールを使ってください。" +
       "あなた(LLM)が知っている知識をもとに、おすすめ商品の情報を products 配列に入れて呼び出してください。" +
-      "各商品には title(商品名), brand(ブランド), category(カテゴリ), description(一言説明) を含めてください。" +
+      "各商品には title, brand, category に加えて、recommendReason(なぜおすすめなのか), " +
+      "imageUrl(商品の画像URL。Amazon商品ページの画像URLを知っていれば入れてください), " +
+      "pros(良い点の配列), cons(注意点の配列) をできるだけ含めてください。" +
       "サーバーが自動的に Amazon の検索リンクとスポンサード広告を付与して返します。",
     inputSchema: {
       query: z.string().describe("検索キーワード（ユーザーが探しているもの）"),
@@ -192,6 +194,10 @@ function createAdServer() {
         category: z.string().describe("カテゴリ"),
         description: z.string().optional().describe("一言おすすめポイント"),
         estimatedPrice: z.string().optional().describe("参考価格（例: ¥3,000〜¥5,000）"),
+        recommendReason: z.string().optional().describe("この商品をおすすめする理由（例: コスパ最強、プロも愛用）"),
+        imageUrl: z.string().optional().describe("商品画像のURL（Amazon等の画像URL）"),
+        pros: z.array(z.string()).optional().describe("良い点のリスト（例: ['軽量で持ち運びやすい', 'バッテリー長持ち']）"),
+        cons: z.array(z.string()).optional().describe("注意点のリスト（例: ['価格がやや高め', 'カラバリが少ない']）"),
       })).min(1).max(10).describe("LLMが推薦する商品リスト"),
     },
     annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: true },
@@ -230,6 +236,74 @@ function createAdServer() {
         query,
         totalResults: enrichedProducts.length,
         products: enrichedProducts,
+        sponsoredProduct,
+        brandBanner,
+        searchAllUrl: buildAmazonSearchUrl(query),
+      },
+    };
+  });
+
+  // --- Tool: compare_products (comparison table) ---
+  registerAppTool(server, "compare_products", {
+    title: "商品比較テーブル",
+    description:
+      "ユーザーが「〇〇を比較して」「AとBどっちがいい？」と言った場合にこのツールを使ってください。" +
+      "あなた(LLM)が知っている知識をもとに、比較対象の商品情報を products 配列に入れて呼び出してください。" +
+      "各商品には title, brand, specs(スペックのキーバリュー), pros(良い点), cons(注意点), " +
+      "recommendReason(おすすめ理由), imageUrl(商品画像URL) をできるだけ含めてください。" +
+      "specsには比較に有用な項目（重量、バッテリー、価格、サイズ等）を統一したキー名で入れてください。",
+    inputSchema: {
+      query: z.string().describe("比較のテーマ（例: ワイヤレスヘッドホン比較）"),
+      products: z.array(z.object({
+        title: z.string().describe("商品名"),
+        brand: z.string().describe("ブランド名"),
+        category: z.string().describe("カテゴリ"),
+        imageUrl: z.string().optional().describe("商品画像のURL"),
+        estimatedPrice: z.string().optional().describe("参考価格"),
+        recommendReason: z.string().optional().describe("この商品をおすすめする理由"),
+        pros: z.array(z.string()).optional().describe("良い点のリスト"),
+        cons: z.array(z.string()).optional().describe("注意点のリスト"),
+        specs: z.record(z.string()).optional().describe("スペック情報（例: { '重量': '250g', 'バッテリー': '30時間' }）"),
+      })).min(2).max(5).describe("比較する商品リスト（2〜5件）"),
+    },
+    annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: true },
+    _meta: { ui: { resourceUri: "ui://widget/amazon-search.html" } },
+  }, async ({ query, products }) => {
+    // Enrich products with Amazon search links
+    const enrichedProducts = products.map((p, i) => ({
+      ...p,
+      id: `cmp-${i}`,
+      amazonUrl: buildAmazonProductUrl(p.title),
+    }));
+
+    // Find matching sponsored ad & banner
+    const sponsoredAd = findSponsoredAd(query);
+    const brandBanner = findBrandBanner(query);
+    if (sponsoredAd) trackImpression(sponsoredAd.adId);
+
+    const sponsoredProduct = sponsoredAd ? {
+      ...sponsoredAd,
+      amazonUrl: buildAmazonDpUrl(sponsoredAd.asin),
+      isSponsored: true,
+    } : null;
+
+    // Collect all spec keys across products
+    const allSpecKeys = [...new Set(enrichedProducts.flatMap((p) => Object.keys(p.specs || {})))];
+
+    const summary = enrichedProducts.map((p, i) =>
+      `${i + 1}. ${p.title} (${p.brand})${p.estimatedPrice ? ` - ${p.estimatedPrice}` : ""}`
+    ).join("\n");
+
+    return {
+      content: [{
+        type: "text",
+        text: `「${query}」の比較 (${enrichedProducts.length}製品):\n${summary}`,
+      }],
+      structuredContent: {
+        action: "comparison",
+        query,
+        products: enrichedProducts,
+        specKeys: allSpecKeys,
         sponsoredProduct,
         brandBanner,
         searchAllUrl: buildAmazonSearchUrl(query),
