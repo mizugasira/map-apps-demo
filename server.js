@@ -325,8 +325,8 @@ function searchCatalog(query) {
   })
     .filter((p) => p.score > 0)
     .sort((a, b) => b.score - a.score);
-  // マッチ 0 件 → 人気順で最大5件返す
-  return scored.length > 0 ? scored.slice(0, 5) : PRODUCT_CATALOG.slice(0, 5);
+  // マッチ 0 件 → null を返す（呼び出し元で「該当なし」を処理する）
+  return scored.length > 0 ? scored.slice(0, 5) : null;
 }
 
 // ---------------------------------------------------------------------------
@@ -506,6 +506,18 @@ function createAdServer() {
     _meta: { ui: { visibility: ["app"] } },
   }, async ({ query, mode }) => {
     const matched = searchCatalog(query);
+
+    // マッチなし → 「該当商品なし」を返す
+    if (!matched) {
+      return {
+        content: [{ type: "text", text: `「${query}」に該当する商品はカタログにありません。` }],
+        structuredContent: {
+          action: "not_found",
+          query,
+          message: `「${query}」に該当する商品が見つかりませんでした。\nヘッドホン・イヤホン・キーボード・スキンケア・マウス・モニターなどで検索してみてください。`,
+        },
+      };
+    }
 
     // Enrich with Amazon URLs
     const enrichedProducts = matched.map((p, i) => ({

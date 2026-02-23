@@ -772,6 +772,12 @@
       return;
     }
 
+    // 該当商品なし
+    if (data.action === "not_found") {
+      showNotFound(data.message || "該当する商品が見つかりませんでした。");
+      return;
+    }
+
     // Product search results
     if (data.products) {
       currentQuery = data.query || "";
@@ -1241,10 +1247,23 @@
 
   function showError(msg) {
     const list = document.getElementById("product-list");
+    if (!list) return;
     list.innerHTML =
       '<div class="empty-state">' +
         '<div class="es-icon">&#9888;&#65039;</div>' +
         '<p>' + escapeHtml(msg) + '</p>' +
+      '</div>';
+  }
+
+  function showNotFound(msg) {
+    const list = document.getElementById("product-list");
+    if (!list) return;
+    var _rb = document.getElementById("result-bar");
+    if (_rb) _rb.style.display = "none";
+    list.innerHTML =
+      '<div class="empty-state">' +
+        '<div class="es-icon">&#128269;</div>' +
+        '<p>' + escapeHtml(msg).replace(/\n/g, '<br/>') + '</p>' +
       '</div>';
   }
 
