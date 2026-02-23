@@ -232,6 +232,37 @@ const PRODUCT_CATALOG = [
     cons: ["左利き用がない","やや重い"],
     specs: { "重量":"141g","バッテリー":"70日間","接続":"Bluetooth/USB","センサー":"8000DPI","ボタン数":"7" },
   },
+  // ── モニター ──
+  {
+    title: "LG 27UN850-W", brand: "LG", category: "モニター",
+    keywords: ["モニター","ディスプレイ","display","monitor","4K","USB-C","液晶","PC","パソコン","LG"],
+    imageUrl: "https://m.media-amazon.com/images/I/71hCNSVPBnL._AC_SY200_.jpg",
+    estimatedPrice: "¥54,000",
+    recommendReason: "4K IPS パネルにUSB-C給電96W搭載。MacBook/iPad を繋ぐだけで充電しながら高解像度作業。",
+    pros: ["4K高解像度","USB-C 96W給電","IPS広視野角","HDR400対応"],
+    cons: ["スピーカーなし","スタンド高さ固定"],
+    specs: { "サイズ":"27インチ","解像度":"3840×2160","パネル":"IPS","リフレッシュレート":"60Hz","入力":"USB-C/HDMI/DP" },
+  },
+  {
+    title: "Dell U2723D UltraSharp", brand: "Dell", category: "モニター",
+    keywords: ["モニター","ディスプレイ","display","monitor","dell","デル","4K","USB-C","液晶","PC","パソコン","ウルトラシャープ"],
+    imageUrl: "https://m.media-amazon.com/images/I/71k9bHKAYML._AC_SY200_.jpg",
+    estimatedPrice: "¥72,000",
+    recommendReason: "Delta E<2 の色精度と IPS Black パネルで写真・動画編集に最適。USB-Cハブ機能内蔵。",
+    pros: ["高色精度 Delta E<2","IPS Blackパネル","USB-Cハブ内蔵","広い調整機能"],
+    cons: ["価格が高め","60Hzのみ"],
+    specs: { "サイズ":"27インチ","解像度":"3840×2160","パネル":"IPS Black","リフレッシュレート":"60Hz","入力":"USB-C/HDMI/DP×2" },
+  },
+  {
+    title: "ASUS ProArt PA279CRV", brand: "ASUS", category: "モニター",
+    keywords: ["モニター","ディスプレイ","display","monitor","ASUS","アスース","4K","クリエイター","液晶","PC","パソコン"],
+    imageUrl: "https://m.media-amazon.com/images/I/71Q1h7f7T2L._AC_SY200_.jpg",
+    estimatedPrice: "¥68,000",
+    recommendReason: "Pantone 検証済みで sRGB 100%・DCI-P3 99% をカバー。クリエイター向け最高峰の色再現。",
+    pros: ["Pantone検証済み","sRGB/P3高カバレッジ","USB-C給電96W","ProArtキャリブレーション"],
+    cons: ["重量が重い","スピーカーなし"],
+    specs: { "サイズ":"27インチ","解像度":"3840×2160","パネル":"IPS","リフレッシュレート":"60Hz","色域":"DCI-P3 99%" },
+  },
 ];
 
 // Ad impression/click tracking (in-memory for demo)
