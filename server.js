@@ -194,6 +194,7 @@ function createAdServer() {
               resourceDomains: [
                 "https://m.media-amazon.com",
                 "https://images-na.ssl-images-amazon.com",
+                "https://images.amazon.com",
                 "https://images.unsplash.com",
                 "https://plus.unsplash.com",
               ],
@@ -212,21 +213,21 @@ function createAdServer() {
     description:
       "ユーザーが「おすすめの〇〇を探して」と言った場合にこのツールを使ってください。" +
       "あなた(LLM)が知っている知識をもとに、おすすめ商品の情報を products 配列に入れて呼び出してください。" +
-      "各商品の imageUrl は必ず設定してください。" +
-      "Amazon の商品画像URL（例: https://m.media-amazon.com/images/I/xxxxx.jpg）を知っていれば使用し、" +
-      "不明な場合は https://images.unsplash.com/photo-xxxxx?w=200 など実在する画像URLを入れてください。" +
-      "imageUrl が空だと商品サムネイルが表示されないため、必ず何らかの画像URLを設定することが重要です。" +
-      "サーバーが自動的に Amazon の検索リンクとスポンサード広告を付与して返します。",
+      "各商品には必ず asin（Amazon の商品ID、例: B08N5KWB9H）を設定してください。" +
+      "asin が設定されると自動的に商品ページURL（amazon.co.jp/dp/{asin}）と商品画像が生成されます。" +
+      "asin が不明な場合は imageUrl に実在する画像URLを設定してください。" +
+      "サーバーが自動的に Amazon の商品ページリンクとスポンサード広告を付与して返します。",
     inputSchema: {
       query: z.string().describe("検索キーワード（ユーザーが探しているもの）"),
       products: z.array(z.object({
         title: z.string().describe("商品名"),
         brand: z.string().describe("ブランド名"),
         category: z.string().describe("カテゴリ"),
+        asin: z.string().optional().describe("Amazon商品ID（例: B08N5KWB9H）。分かる場合は必ず設定してください。これにより商品ページへの直リンクと商品画像が自動生成されます"),
         description: z.string().optional().describe("一言おすすめポイント"),
         estimatedPrice: z.string().optional().describe("参考価格（例: ¥3,000〜¥5,000）"),
         recommendReason: z.string().optional().describe("この商品をおすすめする理由（例: コスパ最強、プロも愛用）"),
-        imageUrl: z.string().describe("商品画像のURL（必須）。Amazon画像URL（https://m.media-amazon.com/images/I/xxxxx.jpg）を優先し、不明な場合はUnsplash等の実在する画像URLを使用してください"),
+        imageUrl: z.string().optional().describe("商品画像URL。asinが設定されている場合は自動生成されるため省略可。asin不明時のみ設定してください"),
         pros: z.array(z.string()).optional().describe("良い点のリスト（例: ['軽量で持ち運びやすい', 'バッテリー長持ち']）"),
         cons: z.array(z.string()).optional().describe("注意点のリスト（例: ['価格がやや高め', 'カラバリが少ない']）"),
       })).min(1).max(10).describe("LLMが推薦する商品リスト"),
@@ -234,11 +235,12 @@ function createAdServer() {
     annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: true },
     _meta: { ui: { resourceUri: "ui://widget/amazon-search-v2.html" } },
   }, async ({ query, products }) => {
-    // Enrich products with Amazon search links
+    // Enrich products: ASIN があれば商品ページURL・画像URLを自動生成
     const enrichedProducts = products.map((p, i) => ({
       ...p,
       id: `prod-${i}`,
-      amazonUrl: buildAmazonProductUrl(p.title),
+      amazonUrl: p.asin ? buildAmazonDpUrl(p.asin) : buildAmazonProductUrl(p.title),
+      imageUrl: p.imageUrl || (p.asin ? `https://images.amazon.com/images/P/${p.asin}.jpg` : null),
       searchUrl: buildAmazonSearchUrl(query),
     }));
 
@@ -280,9 +282,8 @@ function createAdServer() {
     description:
       "ユーザーが「〇〇を比較して」「AとBどっちがいい？」と言った場合にこのツールを使ってください。" +
       "あなた(LLM)が知っている知識をもとに、比較対象の商品情報を products 配列に入れて呼び出してください。" +
-      "各商品の imageUrl は必ず設定してください。" +
-      "Amazon の商品画像URL（例: https://m.media-amazon.com/images/I/xxxxx.jpg）を知っていれば使用し、" +
-      "不明な場合は https://images.unsplash.com/photo-xxxxx?w=200 など実在する画像URLを入れてください。" +
+      "各商品には必ず asin（Amazon の商品ID、例: B08N5KWB9H）を設定してください。" +
+      "asin が設定されると自動的に商品ページURL（amazon.co.jp/dp/{asin}）と商品画像が生成されます。" +
       "specsには比較に有用な項目（重量、バッテリー、価格、サイズ等）を統一したキー名で入れてください。",
     inputSchema: {
       query: z.string().describe("比較のテーマ（例: ワイヤレスヘッドホン比較）"),
@@ -290,7 +291,8 @@ function createAdServer() {
         title: z.string().describe("商品名"),
         brand: z.string().describe("ブランド名"),
         category: z.string().describe("カテゴリ"),
-        imageUrl: z.string().describe("商品画像のURL（必須）。Amazon画像URL（https://m.media-amazon.com/images/I/xxxxx.jpg）を優先し、不明な場合はUnsplash等の実在する画像URLを使用してください"),
+        asin: z.string().optional().describe("Amazon商品ID（例: B08N5KWB9H）。分かる場合は必ず設定してください。これにより商品ページへの直リンクと商品画像が自動生成されます"),
+        imageUrl: z.string().optional().describe("商品画像URL。asinが設定されている場合は自動生成されるため省略可。asin不明時のみ設定してください"),
         estimatedPrice: z.string().optional().describe("参考価格"),
         recommendReason: z.string().optional().describe("この商品をおすすめする理由"),
         pros: z.array(z.string()).optional().describe("良い点のリスト"),
@@ -301,11 +303,12 @@ function createAdServer() {
     annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: true },
     _meta: { ui: { resourceUri: "ui://widget/amazon-search-v2.html" } },
   }, async ({ query, products }) => {
-    // Enrich products with Amazon search links
+    // Enrich products: ASIN があれば商品ページURL・画像URLを自動生成
     const enrichedProducts = products.map((p, i) => ({
       ...p,
       id: `cmp-${i}`,
-      amazonUrl: buildAmazonProductUrl(p.title),
+      amazonUrl: p.asin ? buildAmazonDpUrl(p.asin) : buildAmazonProductUrl(p.title),
+      imageUrl: p.imageUrl || (p.asin ? `https://images.amazon.com/images/P/${p.asin}.jpg` : null),
     }));
 
     // Find matching sponsored ad & banner
