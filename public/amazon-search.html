@@ -1006,20 +1006,23 @@
     var query = input.value.trim();
     if (!query) return;
 
+    // LLM に検索させるメッセージを組み立てる
+    var text = mode === "compare"
+      ? query + " を比較して"
+      : query + " のおすすめ商品を探して";
+
     setSearchLoading(true);
     await bridgeReady;
     try {
-      var result = await rpcRequest("tools/call", {
-        name: "widget_search",
-        arguments: { query: query, mode: mode || "search" },
+      // ChatGPT のチャット欄にメッセージを送信 → LLM が search_products / compare_products を呼ぶ
+      // 結果は ui/notifications/tool-result で非同期に返ってくる
+      await rpcRequest("ui/message", {
+        role: "user",
+        content: [{ type: "text", text: text }],
       });
-      // tools/call の結果は { content: [...], structuredContent: {...} } 形式
-      var data = result && result.structuredContent ? result.structuredContent : result;
-      if (data) handleToolResult({ structuredContent: data });
     } catch (err) {
       var msg = err && err.message ? err.message : String(err);
-      var stack = err && err.stack ? "\n" + err.stack : "";
-      console.error("[widgetSearch] error:", msg, stack);
+      console.error("[widgetSearch] error:", msg);
       showError("検索に失敗しました: " + msg);
     } finally {
       setSearchLoading(false);
