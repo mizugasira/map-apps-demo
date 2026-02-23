@@ -194,6 +194,8 @@ function createAdServer() {
               resourceDomains: [
                 "https://m.media-amazon.com",
                 "https://images-na.ssl-images-amazon.com",
+                "https://images.unsplash.com",
+                "https://plus.unsplash.com",
               ],
               // Amazon 検索リンクへの fetch は不要（href で遷移のみ）
               connectDomains: [],
@@ -210,9 +212,10 @@ function createAdServer() {
     description:
       "ユーザーが「おすすめの〇〇を探して」と言った場合にこのツールを使ってください。" +
       "あなた(LLM)が知っている知識をもとに、おすすめ商品の情報を products 配列に入れて呼び出してください。" +
-      "各商品には title, brand, category に加えて、recommendReason(なぜおすすめなのか), " +
-      "imageUrl(商品の画像URL。Amazon商品ページの画像URLを知っていれば入れてください), " +
-      "pros(良い点の配列), cons(注意点の配列) をできるだけ含めてください。" +
+      "各商品の imageUrl は必ず設定してください。" +
+      "Amazon の商品画像URL（例: https://m.media-amazon.com/images/I/xxxxx.jpg）を知っていれば使用し、" +
+      "不明な場合は https://images.unsplash.com/photo-xxxxx?w=200 など実在する画像URLを入れてください。" +
+      "imageUrl が空だと商品サムネイルが表示されないため、必ず何らかの画像URLを設定することが重要です。" +
       "サーバーが自動的に Amazon の検索リンクとスポンサード広告を付与して返します。",
     inputSchema: {
       query: z.string().describe("検索キーワード（ユーザーが探しているもの）"),
@@ -223,7 +226,7 @@ function createAdServer() {
         description: z.string().optional().describe("一言おすすめポイント"),
         estimatedPrice: z.string().optional().describe("参考価格（例: ¥3,000〜¥5,000）"),
         recommendReason: z.string().optional().describe("この商品をおすすめする理由（例: コスパ最強、プロも愛用）"),
-        imageUrl: z.string().optional().describe("商品画像のURL（Amazon等の画像URL）"),
+        imageUrl: z.string().describe("商品画像のURL（必須）。Amazon画像URL（https://m.media-amazon.com/images/I/xxxxx.jpg）を優先し、不明な場合はUnsplash等の実在する画像URLを使用してください"),
         pros: z.array(z.string()).optional().describe("良い点のリスト（例: ['軽量で持ち運びやすい', 'バッテリー長持ち']）"),
         cons: z.array(z.string()).optional().describe("注意点のリスト（例: ['価格がやや高め', 'カラバリが少ない']）"),
       })).min(1).max(10).describe("LLMが推薦する商品リスト"),
@@ -277,8 +280,9 @@ function createAdServer() {
     description:
       "ユーザーが「〇〇を比較して」「AとBどっちがいい？」と言った場合にこのツールを使ってください。" +
       "あなた(LLM)が知っている知識をもとに、比較対象の商品情報を products 配列に入れて呼び出してください。" +
-      "各商品には title, brand, specs(スペックのキーバリュー), pros(良い点), cons(注意点), " +
-      "recommendReason(おすすめ理由), imageUrl(商品画像URL) をできるだけ含めてください。" +
+      "各商品の imageUrl は必ず設定してください。" +
+      "Amazon の商品画像URL（例: https://m.media-amazon.com/images/I/xxxxx.jpg）を知っていれば使用し、" +
+      "不明な場合は https://images.unsplash.com/photo-xxxxx?w=200 など実在する画像URLを入れてください。" +
       "specsには比較に有用な項目（重量、バッテリー、価格、サイズ等）を統一したキー名で入れてください。",
     inputSchema: {
       query: z.string().describe("比較のテーマ（例: ワイヤレスヘッドホン比較）"),
@@ -286,7 +290,7 @@ function createAdServer() {
         title: z.string().describe("商品名"),
         brand: z.string().describe("ブランド名"),
         category: z.string().describe("カテゴリ"),
-        imageUrl: z.string().optional().describe("商品画像のURL"),
+        imageUrl: z.string().describe("商品画像のURL（必須）。Amazon画像URL（https://m.media-amazon.com/images/I/xxxxx.jpg）を優先し、不明な場合はUnsplash等の実在する画像URLを使用してください"),
         estimatedPrice: z.string().optional().describe("参考価格"),
         recommendReason: z.string().optional().describe("この商品をおすすめする理由"),
         pros: z.array(z.string()).optional().describe("良い点のリスト"),
