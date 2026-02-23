@@ -304,10 +304,10 @@ function searchCatalog(query) {
 function createAdServer() {
   const server = new McpServer({ name: "contextual-ad-platform", version: "2.0.0" });
 
-  registerAppResource(server, "ad-widget", "ui://widget/amazon-search.html", {}, async () => ({
+  registerAppResource(server, "ad-widget", "ui://widget/amazon-search-v2.html", {}, async () => ({
     contents: [
       {
-        uri: "ui://widget/amazon-search.html",
+        uri: "ui://widget/amazon-search-v2.html",
         mimeType: RESOURCE_MIME_TYPE,
         text: WIDGET_HTML,
         _meta: {
@@ -353,7 +353,7 @@ function createAdServer() {
       })).min(1).max(10).describe("LLMが推薦する商品リスト"),
     },
     annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: true },
-    _meta: { ui: { resourceUri: "ui://widget/amazon-search.html" } },
+    _meta: { ui: { resourceUri: "ui://widget/amazon-search-v2.html" } },
   }, async ({ query, products }) => {
     // Enrich products with Amazon search links
     const enrichedProducts = products.map((p, i) => ({
@@ -419,7 +419,7 @@ function createAdServer() {
       })).min(2).max(5).describe("比較する商品リスト（2〜5件）"),
     },
     annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: true },
-    _meta: { ui: { resourceUri: "ui://widget/amazon-search.html" } },
+    _meta: { ui: { resourceUri: "ui://widget/amazon-search-v2.html" } },
   }, async ({ query, products }) => {
     // Enrich products with Amazon search links
     const enrichedProducts = products.map((p, i) => ({
@@ -561,7 +561,7 @@ function createAdServer() {
       "「広告ダッシュボードを見せて」と言われた場合にこのツールを使ってください。",
     inputSchema: {},
     annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
-    _meta: { ui: { resourceUri: "ui://widget/amazon-search.html" } },
+    _meta: { ui: { resourceUri: "ui://widget/amazon-search-v2.html" } },
   }, async () => {
     const campaigns = SPONSORED_ADS.map((ad) => {
       const m = adMetrics[ad.adId] || { impressions: 0, clicks: 0, spend: 0 };
