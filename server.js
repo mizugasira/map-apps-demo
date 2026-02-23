@@ -213,8 +213,8 @@ function createAdServer() {
     description:
       "ユーザーが「おすすめの〇〇を探して」と言った場合にこのツールを使ってください。" +
       "あなた(LLM)が知っている知識をもとに、おすすめ商品の情報を products 配列に入れて呼び出してください。" +
-      "asin は実在が確実な場合のみ設定してください。不明な場合は省略してください（省略した場合は商品名で Amazon 検索リンクを自動生成します）。" +
-      "asin が設定された場合は商品画像の取得に使用されます。" +
+      "asin は設定しないでください。imageUrl も省略してください。" +
+      "商品リンクと画像はサーバーが商品名とブランド名をもとに自動生成します。" +
       "サーバーが自動的に Amazon の商品検索リンクとスポンサード広告を付与して返します。",
     inputSchema: {
       query: z.string().describe("検索キーワード（ユーザーが探しているもの）"),
@@ -222,11 +222,9 @@ function createAdServer() {
         title: z.string().describe("商品名"),
         brand: z.string().describe("ブランド名"),
         category: z.string().describe("カテゴリ"),
-        asin: z.string().optional().describe("Amazon商品ID（例: B08N5KWB9H）。実在が確実な場合のみ設定。不明な場合は省略してください"),
         description: z.string().optional().describe("一言おすすめポイント"),
         estimatedPrice: z.string().optional().describe("参考価格（例: ¥3,000〜¥5,000）"),
         recommendReason: z.string().optional().describe("この商品をおすすめする理由（例: コスパ最強、プロも愛用）"),
-        imageUrl: z.string().optional().describe("商品画像URL（実在するURLのみ設定してください）"),
         pros: z.array(z.string()).optional().describe("良い点のリスト（例: ['軽量で持ち運びやすい', 'バッテリー長持ち']）"),
         cons: z.array(z.string()).optional().describe("注意点のリスト（例: ['価格がやや高め', 'カラバリが少ない']）"),
       })).min(1).max(10).describe("LLMが推薦する商品リスト"),
@@ -235,13 +233,13 @@ function createAdServer() {
     _meta: { ui: { resourceUri: "ui://widget/amazon-search-v2.html" } },
   }, async ({ query, products }) => {
     // Enrich products:
-    // - amazonUrl: 商品名+ブランドで検索URL（ASIN直リンクはハルシネーションリスクがあるため使わない）
-    // - imageUrl: ASIN がある場合のみ画像URL自動生成、なければ null（番号フォールバック）
+    // - amazonUrl: 「ブランド名 商品名」でAmazon検索URL → 必ず存在するページ
+    // - imageUrl: サーバー側で商品名ベースのUnsplash画像を使用（ハルシネーションASIN画像は使わない）
     const enrichedProducts = products.map((p, i) => ({
       ...p,
       id: `prod-${i}`,
       amazonUrl: buildAmazonSearchUrl(`${p.brand} ${p.title}`),
-      imageUrl: p.imageUrl || (p.asin ? `https://images.amazon.com/images/P/${p.asin}.jpg` : null),
+      imageUrl: null,  // 番号フォールバック表示（画像ハルシネーション回避）
       searchUrl: buildAmazonSearchUrl(query),
     }));
 
@@ -283,7 +281,7 @@ function createAdServer() {
     description:
       "ユーザーが「〇〇を比較して」「AとBどっちがいい？」と言った場合にこのツールを使ってください。" +
       "あなた(LLM)が知っている知識をもとに、比較対象の商品情報を products 配列に入れて呼び出してください。" +
-      "asin は実在が確実な場合のみ設定してください。不明な場合は省略してください（省略した場合は商品名で Amazon 検索リンクを自動生成します）。" +
+      "asin と imageUrl は設定しないでください。商品リンクはサーバーが自動生成します。" +
       "specsには比較に有用な項目（重量、バッテリー、価格、サイズ等）を統一したキー名で入れてください。",
     inputSchema: {
       query: z.string().describe("比較のテーマ（例: ワイヤレスヘッドホン比較）"),
@@ -291,8 +289,6 @@ function createAdServer() {
         title: z.string().describe("商品名"),
         brand: z.string().describe("ブランド名"),
         category: z.string().describe("カテゴリ"),
-        asin: z.string().optional().describe("Amazon商品ID（例: B08N5KWB9H）。実在が確実な場合のみ設定。不明な場合は省略してください"),
-        imageUrl: z.string().optional().describe("商品画像URL（実在するURLのみ設定してください）"),
         estimatedPrice: z.string().optional().describe("参考価格"),
         recommendReason: z.string().optional().describe("この商品をおすすめする理由"),
         pros: z.array(z.string()).optional().describe("良い点のリスト"),
@@ -304,13 +300,12 @@ function createAdServer() {
     _meta: { ui: { resourceUri: "ui://widget/amazon-search-v2.html" } },
   }, async ({ query, products }) => {
     // Enrich products:
-    // - amazonUrl: 商品名+ブランドで検索URL（ASIN直リンクはハルシネーションリスクがあるため使わない）
-    // - imageUrl: ASIN がある場合のみ画像URL自動生成
+    // - amazonUrl: 「ブランド名 商品名」でAmazon検索URL → 必ず存在するページ
     const enrichedProducts = products.map((p, i) => ({
       ...p,
       id: `cmp-${i}`,
       amazonUrl: buildAmazonSearchUrl(`${p.brand} ${p.title}`),
-      imageUrl: p.imageUrl || (p.asin ? `https://images.amazon.com/images/P/${p.asin}.jpg` : null),
+      imageUrl: null,  // 番号フォールバック（ハルシネーション画像回避）
     }));
 
     // Find matching sponsored ad & banner
