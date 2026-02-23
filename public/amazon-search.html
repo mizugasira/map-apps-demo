@@ -783,23 +783,25 @@
   // Render product list
   // -----------------------------------------------------------------------
   function renderProducts(data) {
-    document.getElementById("empty-state").style.display = "none";
+    var _empty = document.getElementById("empty-state");
+    if (_empty) _empty.style.display = "none";
 
     // Result bar
     const resultBar = document.getElementById("result-bar");
-    resultBar.style.display = "";
-    document.getElementById("result-count").innerHTML =
-      '<strong>' + data.totalResults + '</strong> 件のおすすめ';
-    document.getElementById("search-info").textContent =
-      '"' + data.query + '" のおすすめ';
+    if (resultBar) resultBar.style.display = "";
+    var _count = document.getElementById("result-count");
+    if (_count) _count.innerHTML = '<strong>' + data.totalResults + '</strong> 件のおすすめ';
+    var _info = document.getElementById("search-info");
+    if (_info) _info.textContent = '"' + data.query + '" のおすすめ';
 
     // "Search all on Amazon" button
     if (data.searchAllUrl) {
       const searchBtn = document.getElementById("search-all-btn");
-      searchBtn.href = data.searchAllUrl;
+      if (searchBtn) searchBtn.href = data.searchAllUrl;
     }
 
     const list = document.getElementById("product-list");
+    if (!list) return;
     list.innerHTML = "";
 
     // Sponsored product card (top)
@@ -1009,7 +1011,10 @@
       var data = result && result.structuredContent ? result.structuredContent : result;
       if (data) handleToolResult({ structuredContent: data });
     } catch (err) {
-      showError("検索に失敗しました: " + (err && err.message ? err.message : "unknown error"));
+      var msg = err && err.message ? err.message : String(err);
+      var stack = err && err.stack ? "\n" + err.stack : "";
+      console.error("[widgetSearch] error:", msg, stack);
+      showError("検索に失敗しました: " + msg);
     } finally {
       setSearchLoading(false);
     }
@@ -1028,20 +1033,23 @@
   // Comparison table view
   // -----------------------------------------------------------------------
   function renderComparison(data) {
-    document.getElementById("empty-state").style.display = "none";
+    var _empty2 = document.getElementById("empty-state");
+    if (_empty2) _empty2.style.display = "none";
 
     // Result bar
     const resultBar = document.getElementById("result-bar");
-    resultBar.style.display = "";
-    document.getElementById("result-count").innerHTML =
-      '<strong>' + data.products.length + '</strong> 製品を比較';
-    document.getElementById("search-info").textContent =
-      '"' + data.query + '" の比較';
+    if (resultBar) resultBar.style.display = "";
+    var _count2 = document.getElementById("result-count");
+    if (_count2) _count2.innerHTML = '<strong>' + data.products.length + '</strong> 製品を比較';
+    var _info2 = document.getElementById("search-info");
+    if (_info2) _info2.textContent = '"' + data.query + '" の比較';
     if (data.searchAllUrl) {
-      document.getElementById("search-all-btn").href = data.searchAllUrl;
+      var _allBtn = document.getElementById("search-all-btn");
+      if (_allBtn) _allBtn.href = data.searchAllUrl;
     }
 
     const main = document.getElementById("product-list");
+    if (!main) return;
     main.innerHTML = "";
 
     // Sponsored card at top
@@ -1145,10 +1153,13 @@
   // Dashboard view
   // -----------------------------------------------------------------------
   function renderDashboard(data) {
-    document.getElementById("result-bar").style.display = "none";
-    document.getElementById("search-info").textContent = "Ad Dashboard";
+    var _rb = document.getElementById("result-bar");
+    if (_rb) _rb.style.display = "none";
+    var _si = document.getElementById("search-info");
+    if (_si) _si.textContent = "Ad Dashboard";
 
     const main = document.getElementById("product-list");
+    if (!main) return;
     main.innerHTML = "";
 
     const dashboard = document.createElement("div");
