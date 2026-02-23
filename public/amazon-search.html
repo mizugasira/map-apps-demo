@@ -587,6 +587,43 @@
   .empty-state .es-icon { font-size: 48px; margin-bottom: 12px; }
   .empty-state p { font-size: 14px; line-height: 1.6; }
 
+  /* Modal overlay */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.visible {
+    display: flex;
+  }
+  .modal {
+    background: #fff;
+    border-radius: 12px;
+    max-width: 480px;
+    width: 90%;
+    max-height: 85vh;
+    overflow-y: auto;
+  }
+  .modal-close-bar {
+    display: flex;
+    justify-content: flex-end;
+    padding: 10px 12px 0;
+  }
+  .modal-close-btn {
+    background: none;
+    border: none;
+    font-size: 22px;
+    cursor: pointer;
+    color: #565959;
+    line-height: 1;
+  }
+  .modal-close-btn:hover { color: #0f1111; }
+  .modal-product { padding: 0 16px 16px; }
+
   /* Responsive */
   @media (max-width: 480px) {
     .product-card { flex-direction: column; align-items: center; text-align: center; }
@@ -888,7 +925,7 @@
         '<div class="product-category">' + escapeHtml(p.category) + '</div>' +
         reasonHtml +
         prosConsHtml +
-        '<a class="buy-btn" href="' + escapeAttr(p.amazonUrl) + '" target="_blank" rel="noopener">Amazonで検索 <span class="arrow">&#8599;</span></a>' +
+        '<a class="buy-btn" href="' + escapeAttr(p.amazonUrl) + '" target="_blank" rel="noopener">' + (p.asin ? 'Amazonで見る' : 'Amazonで検索') + ' <span class="arrow">&#8599;</span></a>' +
       '</div>';
 
     return card;
@@ -1047,7 +1084,7 @@
     html += '<tr><td class="row-header"></td>';
     for (var a = 0; a < colCount; a++) {
       html += '<td class="action-cell">' +
-        '<a class="buy-btn" href="' + escapeAttr(products[a].amazonUrl) + '" target="_blank" rel="noopener">Amazonで検索 <span class="arrow">&#8599;</span></a>' +
+        '<a class="buy-btn" href="' + escapeAttr(products[a].amazonUrl) + '" target="_blank" rel="noopener">' + (products[a].asin ? 'Amazonで見る' : 'Amazonで検索') + ' <span class="arrow">&#8599;</span></a>' +
         '</td>';
     }
     html += '</tr>';
