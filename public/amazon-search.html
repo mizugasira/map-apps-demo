@@ -925,7 +925,7 @@
         '<div class="product-category">' + escapeHtml(p.category) + '</div>' +
         reasonHtml +
         prosConsHtml +
-        '<a class="buy-btn" href="' + escapeAttr(p.amazonUrl) + '" target="_blank" rel="noopener">' + (p.asin ? 'Amazonで見る' : 'Amazonで検索') + ' <span class="arrow">&#8599;</span></a>' +
+        '<a class="buy-btn" href="' + escapeAttr(p.amazonUrl) + '" target="_blank" rel="noopener">Amazonで探す <span class="arrow">&#8599;</span></a>' +
       '</div>';
 
     return card;
@@ -1084,7 +1084,7 @@
     html += '<tr><td class="row-header"></td>';
     for (var a = 0; a < colCount; a++) {
       html += '<td class="action-cell">' +
-        '<a class="buy-btn" href="' + escapeAttr(products[a].amazonUrl) + '" target="_blank" rel="noopener">' + (products[a].asin ? 'Amazonで見る' : 'Amazonで検索') + ' <span class="arrow">&#8599;</span></a>' +
+        '<a class="buy-btn" href="' + escapeAttr(products[a].amazonUrl) + '" target="_blank" rel="noopener">Amazonで探す <span class="arrow">&#8599;</span></a>' +
         '</td>';
     }
     html += '</tr>';
