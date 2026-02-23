@@ -982,15 +982,18 @@
     var btns = document.querySelectorAll(".ws-btn");
     btns.forEach(function (b) { b.disabled = loading; });
     var input = document.getElementById("widget-search-input");
-    input.disabled = loading;
+    if (input) input.disabled = loading;
     // スピナー表示
     var searchBtn = document.getElementById("widget-search-btn");
-    if (loading) searchBtn.classList.add("ws-loading");
-    else searchBtn.classList.remove("ws-loading");
+    if (searchBtn) {
+      if (loading) searchBtn.classList.add("ws-loading");
+      else searchBtn.classList.remove("ws-loading");
+    }
   }
 
   async function widgetSearch(mode) {
     var input = document.getElementById("widget-search-input");
+    if (!input) return;
     var query = input.value.trim();
     if (!query) return;
 
@@ -1011,13 +1014,12 @@
     }
   }
 
-  document.getElementById("widget-search-btn").addEventListener("click", function () {
-    widgetSearch("search");
-  });
-  document.getElementById("widget-compare-btn").addEventListener("click", function () {
-    widgetSearch("compare");
-  });
-  document.getElementById("widget-search-input").addEventListener("keydown", function (e) {
+  var _wsBtn = document.getElementById("widget-search-btn");
+  var _wcBtn = document.getElementById("widget-compare-btn");
+  var _wsInput = document.getElementById("widget-search-input");
+  if (_wsBtn) _wsBtn.addEventListener("click", function () { widgetSearch("search"); });
+  if (_wcBtn) _wcBtn.addEventListener("click", function () { widgetSearch("compare"); });
+  if (_wsInput) _wsInput.addEventListener("keydown", function (e) {
     if (e.key === "Enter") widgetSearch("search");
   });
 
